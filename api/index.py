@@ -6,7 +6,15 @@ import os
 # Importa a nossa função de processamento principal
 from .excel_processor import process_excel_files_from_paths
 
-app = FastAPI()
+# Adiciona a informação do servidor de produção para o esquema OpenAPI
+servers = [
+    {
+        "url": "https://processador-excel-api-candido-adv.vercel.app",
+        "description": "Servidor de Produção"
+    }
+]
+
+app = FastAPI(servers=servers)
 
 @app.get("/api/health")
 def health_check():
