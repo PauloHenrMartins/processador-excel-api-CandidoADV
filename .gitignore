@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Ficheiros de ambiente virtual
+.env
+.venv
+venv/
+env/
+
+# Ficheiros gerados
+output.json
+error.log
+
+# Ficheiros temporários do sistema
+.DS_Store
+Thumbs.db
