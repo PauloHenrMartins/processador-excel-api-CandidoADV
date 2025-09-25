@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from typing import List
+from typing import List, Annotated
 import shutil
 import os
 
@@ -22,7 +22,7 @@ def health_check():
     return {"status": "ok"}
 
 @app.post("/api/process")
-async def process_excel_files(files: List[UploadFile] = File(...)):
+async def process_excel_files(files: Annotated[List[UploadFile], File()]):
     """
     Recebe uma lista de ficheiros Excel, processa-os e retorna o JSON unificado.
     """
