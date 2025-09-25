@@ -7,11 +7,15 @@
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
       "src": "/privacy.html",
       "dest": "/privacy.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/api/index.py"
     }
   ]

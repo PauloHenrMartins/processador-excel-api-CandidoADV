@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador de Excel</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 2rem; background-color: #f4f4f9; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 800px; }
+        h1 { color: #333; }
+        input[type="file"] { margin-bottom: 1rem; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:disabled { background-color: #aaa; }
+        #result-container { margin-top: 2rem; width: 100%; }
+        textarea { width: 100%; height: 400px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 5px; }
+        .loader { display: none; margin-top: 1rem; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Processador de Publicações Excel</h1>
+        <p>Faça o upload de um ou mais ficheiros Excel (.xlsx) para convertê-los em JSON.</p>
+        <input type="file" id="file-input" multiple accept=".xlsx">
+        <button id="upload-button">Processar</button>
+        <div class="loader" id="loader"></div>
+        <div id="result-container">
+            <h3>JSON Resultante:</h3>
+            <textarea id="result-json" readonly placeholder="O resultado JSON aparecerá aqui..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const uploadButton = document.getElementById('upload-button');
+        const resultTextarea = document.getElementById('result-json');
+        const loader = document.getElementById('loader');
+        const apiUrl = 'https://processador-excel-api-candido-adv.vercel.app/api/process';
+
+        // Função para converter ficheiro para Base64
+        function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    // Extrai apenas a parte Base64 da string
+                    let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+                    if ((encoded.length % 4) > 0) {
+                        encoded += '='.repeat(4 - (encoded.length % 4));
+                    }
+                    resolve(encoded);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            if (fileInput.files.length === 0) {
+                alert('Por favor, selecione pelo menos um ficheiro.');
+                return;
+            }
+
+            uploadButton.disabled = true;
+            loader.style.display = 'block';
+            resultTextarea.value = 'Processando...';
+
+            try {
+                const filesPayload = [];
+                for (const file of fileInput.files) {
+                    const file_base64 = await toBase64(file);
+                    filesPayload.push({ filename: file.name, file_base64 });
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ files: filesPayload })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro da API: ${errorData.detail || response.statusText}`);
+                }
+
+                const resultData = await response.json();
+                resultTextarea.value = JSON.stringify(resultData, null, 4);
+
+            } catch (error) {
+                resultTextarea.value = `Ocorreu um erro: ${error.message}`;
+            } finally {
+                uploadButton.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
